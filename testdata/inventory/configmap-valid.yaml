@@ -1,0 +1,8 @@
+# Valid configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: invalid-configmap
+data:
+  foo: "bar"
+  baz: "qux"

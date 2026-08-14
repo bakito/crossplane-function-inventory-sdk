@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Event
+metadata:
+  name: event
+  namespace: default
+involvedObject:
+  kind: Foo
+reason: Test
+message: bar
