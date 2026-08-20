@@ -131,14 +131,14 @@ DesiredNamespaceReady    map[string]fnv1.Ready                    `crossplane:"d
 FunctionInput    *myapi.MyInput                `crossplane:"input"`
 ```
 
-### Required Resources (Extra Resources)
+### Required Resources (Required Resources)
 
-Requesting extra resources:
+Requesting required resources:
 
 ```go
 req, err := require.Requires(
-require.As(ExtraResourcesServer).WithRO(&v1beta1.MSSQLServer{}).MatchName(sqlNaming.ServerName()),
-require.As(ExtraResourcesElasticPool).WithRO(&v1beta1.MSSQLElasticPool{}).MatchName(sqlNaming.ElasticPoolName()),
+require.As(RequiredResourcesServer).WithRO(&v1beta1.MSSQLServer{}).MatchName(sqlNaming.ServerName()),
+require.As(RequiredResourcesElasticPool).WithRO(&v1beta1.MSSQLElasticPool{}).MatchName(sqlNaming.ElasticPoolName()),
 )
 if err != nil {
 return err
@@ -146,7 +146,7 @@ return err
 
 provided, err := req.Assure(req)
 if !provided {
-m.Log.Debug("No extra resources present, exiting", "requirements", rsp.GetRequirements())
+m.Log.Debug("No required resources present, exiting", "requirements", rsp.GetRequirements())
 return rsp, nil
 }
 if err != nil {
@@ -159,15 +159,15 @@ req.Register(rsp)
 
 ```
 
-Accessing extra resources
+Accessing required resources
 
 ```go
-// Access a single extra resource
-ExtraPod      *corev1.Pod `crossplane:"extra:pod-extra"`
-ExtraPodReady fnv1.Ready  `crossplane:"extra:pod-extra"`
-// Accessing a list of extra resources
-ExtraSvc      []*corev1.Service `crossplane:"extra:svc-extra"`
-ExtraSvcReady []fnv1.Ready      `crossplane:"extra:svc-extra"`
+// Access a single required resource
+RequiredPod      *corev1.Pod `crossplane:"required:pod-required"`
+RequiredPodReady fnv1.Ready  `crossplane:"required:pod-required"`
+// Accessing a list of required resources
+RequiredSvc      []*corev1.Service `crossplane:"required:svc-required"`
+RequiredSvcReady []fnv1.Ready      `crossplane:"required:svc-required"`
 ```
 
 ## Generating Constants
