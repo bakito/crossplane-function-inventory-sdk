@@ -5,7 +5,7 @@ go 1.26.6
 require (
 	github.com/alecthomas/kong v1.16.1
 	github.com/aymanbagabas/go-udiff v0.4.1
-	github.com/crossplane/crossplane-runtime/v2 v2.3.3
+	github.com/crossplane/crossplane-runtime/v2 v2.4.0
 	github.com/crossplane/crossplane/apis/v2 v2.3.4
 	github.com/crossplane/function-sdk-go v0.7.1
 	github.com/go-json-experiment/json v0.0.0-20260623181947-01eb4420fa68
@@ -43,10 +43,8 @@ require (
 	github.com/go-openapi/swag/typeutils v0.28.0 // indirect
 	github.com/go-openapi/swag/yamlutils v0.28.0 // indirect
 	github.com/gobuffalo/flect v1.0.3 // indirect
-	github.com/google/cel-go v0.29.0 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
