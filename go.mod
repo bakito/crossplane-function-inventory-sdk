@@ -11,7 +11,7 @@ require (
 	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3
 	github.com/pkg/errors v0.9.1
 	github.com/stoewer/go-strcase v1.3.1
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.36.4
