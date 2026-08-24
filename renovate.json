@@ -12,5 +12,17 @@
         "# renovate: packageName=(?<packageName>.+?)\\s+.+?_VERSION \\?= (?<currentValue>.+?)\\s"
       ]
     }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "github.com/crossplane/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "crossplane"
+    }
   ]
 }
