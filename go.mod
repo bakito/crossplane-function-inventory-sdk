@@ -8,7 +8,7 @@ require (
 	github.com/crossplane/crossplane-runtime/v2 v2.3.3
 	github.com/crossplane/crossplane/apis/v2 v2.3.4
 	github.com/crossplane/function-sdk-go v0.7.1
-	github.com/go-json-experiment/json v0.0.0-20260623181947-01eb4420fa68
+	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3
 	github.com/pkg/errors v0.9.1
 	github.com/stoewer/go-strcase v1.3.1
 	github.com/stretchr/testify v1.12.0
