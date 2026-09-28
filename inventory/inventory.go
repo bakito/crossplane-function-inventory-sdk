@@ -68,27 +68,30 @@ func BuildGracefulInventory(
 	}
 
 	// Handle composed resources
-	if inventory.desiredComposed, err = bldr.buildInventoryResourceMap(
+	inventory.desiredComposed, err = bldr.buildInventoryResourceMap(
 		log,
 		req.GetDesired().GetResources(),
 		bldr.mapping,
-	); err != nil {
+	)
+	if err != nil {
 		return nil, nil, err
 	}
 
-	if inventory.observedComposed, err = bldr.buildInventoryResourceMap(
+	inventory.observedComposed, err = bldr.buildInventoryResourceMap(
 		log,
 		req.GetObserved().GetResources(),
 		bldr.mapping,
-	); err != nil {
+	)
+	if err != nil {
 		return nil, nil, err
 	}
 
-	if inventory.requirements, err = bldr.buildInventoryResourcesMap(
+	inventory.requirements, err = bldr.buildInventoryResourcesMap(
 		log,
 		req.GetRequiredResources(),
 		bldr.mapping,
-	); err != nil {
+	)
+	if err != nil {
 		return nil, nil, err
 	}
 

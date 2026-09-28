@@ -92,11 +92,12 @@ func Inject(inv Reader, targets ...any) error {
 		structType := reflectValue.Type()
 		for fieldIndex := range structType.NumField() {
 			field := structType.Field(fieldIndex)
-			if err := processFieldInjection(
+			err = processFieldInjection(
 				inv,
 				field,
 				reflectValue.Field(fieldIndex),
-			); err != nil {
+			)
+			if err != nil {
 				return err
 			}
 		}
