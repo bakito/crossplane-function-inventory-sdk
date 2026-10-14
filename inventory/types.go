@@ -23,7 +23,8 @@ func (m Mapping) validate() error {
 	for k := range m {
 		if other := FindConflictingPrefix(m, k); other != "" {
 			return fmt.Errorf(
-				"mapping name prefix must be unique. Got conflict with %q and %q", k, other)
+				"mapping name prefix must be unique. Got conflict with %q and %q", k, other,
+			)
 		}
 	}
 	return nil

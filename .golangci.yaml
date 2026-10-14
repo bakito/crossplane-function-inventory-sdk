@@ -206,7 +206,8 @@ formatters:
         - default
         - prefix(github.com/crossplane)
     gofumpt:
-      extra-rules: true
+      extra:
+        group-params: true
     golines:
       max-len: 128
       tab-len: 4

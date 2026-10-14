@@ -136,27 +136,26 @@ FunctionInput    *myapi.MyInput                `crossplane:"input"`
 Requesting required resources:
 
 ```go
-req, err := require.Requires(
+reqs, err := require.Requires(
 require.As(RequiredResourcesServer).WithRO(&v1beta1.MSSQLServer{}).MatchName(sqlNaming.ServerName()),
 require.As(RequiredResourcesElasticPool).WithRO(&v1beta1.MSSQLElasticPool{}).MatchName(sqlNaming.ElasticPoolName()),
 )
 if err != nil {
-return err
+return rsp, err
 }
 
-provided, err := req.Assure(req)
-if !provided {
-m.Log.Debug("No required resources present, exiting", "requirements", rsp.GetRequirements())
-return rsp, nil
-}
+// Register requirements before checking, so Crossplane knows what to fetch.
+reqs.Register(rsp)
+
+provided, err := reqs.Assure(req)
 if err != nil {
 response.Fatal(rsp, errors.Wrapf(err, "requirements not fulfilled"))
 return rsp, nil
 }
-
-req.Register(rsp)
-
-
+if !provided {
+m.Log.Debug("Required resources not yet provided, waiting for next iteration")
+return rsp, nil
+}
 ```
 
 Accessing required resources
