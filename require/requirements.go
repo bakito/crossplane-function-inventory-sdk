@@ -1,6 +1,8 @@
 package require
 
 import (
+	"maps"
+
 	"github.com/pkg/errors"
 
 	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
@@ -24,24 +26,34 @@ func Requires(requirements ...Requirement) (*Requirements, error) {
 	return r, nil
 }
 
-// Assure checks if the requirements are met in the given request. If not, it returns false.
+// Assure checks if the requirements are met in the given request. If not, it
+// returns false. Per the function protocol, Crossplane sets the map key to an
+// empty Resources message when it tried to fetch a resource that does not exist.
+// So:
+//
+//   - key missing → not requested yet → wait for the next iteration
+//   - key present, wrong item count → real error
+//   - all keys present and valid → continue
+//
+// Errors still return provided=true so that existing callers following the
+// README pattern (checking !provided before err != nil) keep surfacing errors
+// instead of silently waiting.
 func (r *Requirements) Assure(req *fnv1.RunFunctionRequest) (provided bool, err error) {
 	if len(r.selectors) == 0 {
 		return true, nil
 	}
 	rr := req.GetRequiredResources()
-	if rr == nil {
-		// required resources not yet provided - return and wait for the next iteration
-		return false, nil
-	}
+	provided = true
 	for name, sel := range r.selectors {
 		extra, ok := rr[name]
 		if !ok {
-			return true, errors.Errorf("required resource %q not found", name)
+			provided = false // not fetched yet, wait for next iteration
+			continue
 		}
+		l := len(extra.GetItems())
 		switch sel.GetMatch().(type) {
 		case *fnv1.ResourceSelector_MatchName:
-			if l := len(extra.GetItems()); l != 1 {
+			if l != 1 {
 				return true, errors.Errorf(
 					"expected 1 required resource for name %q, but got %d",
 					name,
@@ -49,23 +61,28 @@ func (r *Requirements) Assure(req *fnv1.RunFunctionRequest) (provided bool, err 
 				)
 			}
 		case *fnv1.ResourceSelector_MatchLabels:
-			if l := len(extra.GetItems()); l == 0 {
+			if l == 0 {
 				return true, errors.Errorf(
-					"expected > 1 required resources for name %q, but got %d",
+					"expected >= 1 required resources for name %q, but got %d",
 					name,
 					l,
 				)
 			}
 		}
 	}
-	return true, nil
+	return provided, nil
 }
 
-// Register registers the requirements in the given response.
+// Register registers the requirements in the given response, merging with any
+// existing requirements rather than overwriting them.
 func (r *Requirements) Register(rsp *fnv1.RunFunctionResponse) {
-	if len(r.selectors) > 0 {
+	if len(r.selectors) == 0 {
+		return
+	}
+	if rsp.GetRequirements() == nil {
 		rsp.Requirements = &fnv1.Requirements{
-			Resources: r.selectors,
+			Resources: map[string]*fnv1.ResourceSelector{},
 		}
 	}
+	maps.Copy(rsp.GetRequirements().GetResources(), r.selectors)
 }

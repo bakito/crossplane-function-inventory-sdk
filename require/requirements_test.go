@@ -58,8 +58,34 @@ func TestAssure(t *testing.T) {
 			request: &fnv1.RunFunctionRequest{
 				RequiredResources: map[string]*fnv1.Resources{},
 			},
-			expectedProv:  true,
-			expectedError: "required resource \"resource1\" not found",
+			expectedProv:  false,
+			expectedError: "",
+		},
+		{
+			name: "MissingRequiredResourceWithOtherPresent",
+			requirements: &Requirements{
+				selectors: map[string]*fnv1.ResourceSelector{
+					testResource1: {
+						Match: &fnv1.ResourceSelector_MatchName{
+							MatchName: "match-name",
+						},
+					},
+					"resource2": {
+						Match: &fnv1.ResourceSelector_MatchName{
+							MatchName: "match-name-2",
+						},
+					},
+				},
+			},
+			request: &fnv1.RunFunctionRequest{
+				RequiredResources: map[string]*fnv1.Resources{
+					testResource1: {
+						Items: []*fnv1.Resource{{}},
+					},
+				},
+			},
+			expectedProv:  false,
+			expectedError: "",
 		},
 		{
 			name: "MatchNameValidationError",
@@ -101,7 +127,7 @@ func TestAssure(t *testing.T) {
 				},
 			},
 			expectedProv:  true,
-			expectedError: "expected > 1 required resources for name \"resource1\", but got 0",
+			expectedError: "expected >= 1 required resources for name \"resource1\", but got 0",
 		},
 	}
 

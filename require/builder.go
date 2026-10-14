@@ -48,21 +48,21 @@ func (r *requirement) WithScheme(scheme runtime.Scheme) ROBuilder {
 	return r
 }
 
-func (r *requirement) WithNamespace(namespace *string) ROBuilder {
+func (r *requirement) WithNamespace(namespace *string) RequirementBuilder {
 	r.namespace = namespace
 	return r
+}
+
+type RequirementBuilder interface {
+	WithNamespace(namespace *string) RequirementBuilder
+	MatchName(resourceName string) Requirement
+	MatchLabels(labels map[string]string) Requirement
 }
 
 type ROBuilder interface {
 	RequirementBuilder
 	WithVersion(version string) ROBuilder
 	WithScheme(scheme runtime.Scheme) ROBuilder
-	WithNamespace(namespace *string) ROBuilder
-}
-
-type RequirementBuilder interface {
-	MatchName(resourceName string) Requirement
-	MatchLabels(labels map[string]string) Requirement
 }
 
 func (r *requirement) MatchName(resourceName string) Requirement {
