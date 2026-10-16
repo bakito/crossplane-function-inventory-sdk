@@ -116,26 +116,34 @@ func processFieldResponse(
 
 // processCompositeField handles desired composite resource fields.
 func processCompositeField(fieldValue reflect.Value, xr *resource.Composite) error {
-	o, ok := fieldValue.Interface().(runtime.Object)
-	if !ok {
-		return nil
-	}
-	if isNilOrEmpty(o) {
-		// We return early here as parsing a nil object doesn't make sense so we just skip it
-		return nil
-	}
+	switch v := fieldValue.Interface().(type) {
+	case runtime.Object:
+		if isNilOrEmpty(v) {
+			// We return early here as parsing a nil object doesn't make sense so we just skip it
+			return nil
+		}
 
-	un, err := runtime.DefaultUnstructuredConverter.ToUnstructured(o)
-	if err != nil {
-		return err
-	}
+		un, err := runtime.DefaultUnstructuredConverter.ToUnstructured(v)
+		if err != nil {
+			return err
+		}
 
-	// A function can’t change: The metadata or spec of the composite resource.
-	// https://docs.crossplane.io/latest/composition/compositions/#desired-state
-	// Only status can be changed
-	delete(un, "metadata")
-	delete(un, "spec")
-	xr.Resource.Object = un
+		// A function can't change: The metadata or spec of the composite resource.
+		// https://docs.crossplane.io/latest/composition/compositions/#desired-state
+		// Only status can be changed
+		delete(un, "metadata")
+		delete(un, "spec")
+		xr.Resource.Object = un
+
+	case fnv1.Ready:
+		switch v {
+		case fnv1.Ready_READY_TRUE:
+			xr.Ready = resource.ReadyTrue
+		case fnv1.Ready_READY_FALSE:
+			xr.Ready = resource.ReadyFalse
+		}
+		// READY_UNSPECIFIED is ignored — leaves xr.Ready at its zero value.
+	}
 
 	return nil
 }
