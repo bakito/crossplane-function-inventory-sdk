@@ -10,6 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/resource/composed"
 	"github.com/crossplane/function-sdk-go/resource/composite"
@@ -56,6 +57,12 @@ func (cb *CompositeBuilder) WithConnectionDetail(key string, value []byte) *Comp
 	return cb
 }
 
+// WithReady sets the ready state.
+func (cb *CompositeBuilder) WithReady(ready resource.Ready) *CompositeBuilder {
+	cb.composite.Ready = ready
+	return cb
+}
+
 func (cb *CompositeBuilder) Build() *resource.Composite {
 	return &cb.composite
 }
@@ -67,7 +74,7 @@ func (cb *CompositeBuilder) Build() *resource.Composite {
 // assertions required the stricter client.Object.
 type fakeRuntimeObject struct {
 	//nolint:revive // this is valid
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta `       json:",inline"`
 	Foo             string `json:"foo"`
 }
 
@@ -129,6 +136,50 @@ func TestConvertToResponse(t *gt.T) {
 			},
 			dsdc: map[resource.Name]*resource.DesiredComposed{},
 			xr:   NewComposite(t).WithObject(&fakeRuntimeObject{Foo: "bar"}).Build(),
+		},
+		{
+			name: "DesiredComposite ready flag with object",
+			targets: []any{
+				struct {
+					Desired      *corev1.Namespace `crossplane:"desired-composite"`
+					DesiredReady fnv1.Ready        `crossplane:"desired-composite"`
+				}{
+					Desired: &corev1.Namespace{
+						ObjectMeta: metav1.ObjectMeta{Name: "test"},
+					},
+					DesiredReady: fnv1.Ready_READY_FALSE,
+				},
+			},
+			dsdc: map[resource.Name]*resource.DesiredComposed{},
+			xr: NewComposite(
+				t,
+			).WithObject(&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test"}}).
+				WithReady(resource.ReadyFalse).
+				Build(),
+		},
+		{
+			name: "DesiredComposite ready flag only (no object)",
+			targets: []any{
+				struct {
+					DesiredReady fnv1.Ready `crossplane:"desired-composite"`
+				}{
+					DesiredReady: fnv1.Ready_READY_TRUE,
+				},
+			},
+			dsdc: map[resource.Name]*resource.DesiredComposed{},
+			xr:   NewComposite(t).WithReady(resource.ReadyTrue).Build(),
+		},
+		{
+			name: "DesiredComposite ready flag unspecified (should not produce composite)",
+			targets: []any{
+				struct {
+					DesiredReady fnv1.Ready `crossplane:"desired-composite"`
+				}{
+					DesiredReady: fnv1.Ready_READY_UNSPECIFIED,
+				},
+			},
+			dsdc: map[resource.Name]*resource.DesiredComposed{},
+			xr:   nil,
 		},
 	}
 
