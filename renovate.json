@@ -32,6 +32,38 @@
         "patch"
       ],
       "groupName": "crossplane"
+    },
+    {
+      "description": "Go directive: bump the go line in go.mod and separate minor and patch updates so each gets its own policy",
+      "matchDatasources": [
+        "golang-version"
+      ],
+      "matchDepNames": [
+        "go"
+      ],
+      "matchDepTypes": [
+        "golang"
+      ],
+      "rangeStrategy": "bump",
+      "separateMinorPatch": true
+    },
+    {
+      "description": "Go directive: move to a new Go minor only once it is the oldest supported (~6 months after release)",
+      "matchDatasources": [
+        "golang-version"
+      ],
+      "matchDepNames": [
+        "go"
+      ],
+      "matchDepTypes": [
+        "golang"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "minimumReleaseAge": "180 days",
+      "internalChecksFilter": "strict"
     }
   ]
 }
