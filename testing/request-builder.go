@@ -86,6 +86,57 @@ func (b *RunFunctionRequestBuilder) WithObservedResource(
 	return b
 }
 
+// Wdc adds a desired composite resource.
+func (b *RunFunctionRequestBuilder) Wdc(
+	composite *ResourceBuilder,
+) *RunFunctionRequestBuilder {
+	return b.WithDesiredComposite(composite)
+}
+
+// WithDesiredComposite adds a desired composite resource.
+func (b *RunFunctionRequestBuilder) WithDesiredComposite(
+	composite *ResourceBuilder,
+) *RunFunctionRequestBuilder {
+	if b.request.GetDesired() == nil {
+		b.request.Desired = &fnv1.State{}
+	}
+	b.request.Desired.Composite = &fnv1.Resource{
+		Resource: composite.ToStruct(),
+	}
+	return b
+}
+
+// Wdr adds a desired resource with the given name.
+func (b *RunFunctionRequestBuilder) Wdr(
+	name string,
+	resource *ResourceBuilder,
+	ready ...fnv1.Ready, // optional - first ready is used if provided
+) *RunFunctionRequestBuilder {
+	return b.WithDesiredResource(name, resource, ready...)
+}
+
+// WithDesiredResource adds a desired resource with the given name.
+func (b *RunFunctionRequestBuilder) WithDesiredResource(
+	name string,
+	resource *ResourceBuilder,
+	ready ...fnv1.Ready, // optional - first ready is used if provided
+) *RunFunctionRequestBuilder {
+	if _, ok := b.request.GetDesired().GetResources()[name]; ok {
+		panic(fmt.Sprintf("DesiredResource %q already exists", name))
+	}
+	if b.request.GetDesired() == nil {
+		b.request.Desired = &fnv1.State{}
+	}
+	if b.request.Desired.Resources == nil {
+		b.request.Desired.Resources = make(map[string]*fnv1.Resource)
+	}
+	b.request.Desired.Resources[name] = &fnv1.Resource{Resource: resource.ToStruct()}
+	if len(ready) > 0 {
+		b.request.Desired.Resources[name].Ready = ready[0]
+	}
+	return b
+}
+
 // WithRequiredResources adds required resources with the given name.
 func (b *RunFunctionRequestBuilder) WithRequiredResources(
 	name string,

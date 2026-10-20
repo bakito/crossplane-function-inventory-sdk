@@ -41,6 +41,14 @@ type GoldenFileCase struct {
 	Observed map[string]string
 	// Required resources to mapped by their key used as required resources in the function request
 	Required map[string]string
+	// DesiredComposite is the path to a file representing a desired composite
+	// resource already produced by a prior function in the pipeline, seeded
+	// into the request as req.Desired.Composite.
+	DesiredComposite string
+	// Desired resources mapped by their key, seeded into the request as
+	// req.Desired.Resources - used to simulate desired state produced by a
+	// prior function in the composition pipeline.
+	Desired map[string]string
 	// Input the function input file for the request
 	Input string
 	// DesiredLocation location of the desired files used to verif the output or the function
@@ -164,6 +172,12 @@ func (c *GoldenFileCase) prepareRequest() *fnv1.RunFunctionRequest {
 	}
 	for name, req := range c.Required {
 		rb = rb.WithRequiredResources(name, From(req).ToStruct())
+	}
+	if c.DesiredComposite != "" {
+		rb = rb.WithDesiredComposite(From(c.DesiredComposite))
+	}
+	for name, des := range c.Desired {
+		rb = rb.WithDesiredResource(name, From(des))
 	}
 
 	req := rb.Build()
