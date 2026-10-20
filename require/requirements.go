@@ -84,5 +84,8 @@ func (r *Requirements) Register(rsp *fnv1.RunFunctionResponse) {
 			Resources: map[string]*fnv1.ResourceSelector{},
 		}
 	}
+	if rsp.GetRequirements().GetResources() == nil {
+		rsp.Requirements.Resources = map[string]*fnv1.ResourceSelector{}
+	}
 	maps.Copy(rsp.GetRequirements().GetResources(), r.selectors)
 }
