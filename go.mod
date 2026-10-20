@@ -1,6 +1,6 @@
 module github.com/bakito/crossplane-function-inventory-sdk
 
-go 1.27.2
+go 1.26.0
 
 require (
 	github.com/alecthomas/kong v1.16.1
