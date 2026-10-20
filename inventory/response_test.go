@@ -74,7 +74,7 @@ func (cb *CompositeBuilder) Build() *resource.Composite {
 // assertions required the stricter client.Object.
 type fakeRuntimeObject struct {
 	//nolint:revive // this is valid
-	metav1.TypeMeta `       json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	Foo             string `json:"foo"`
 }
 

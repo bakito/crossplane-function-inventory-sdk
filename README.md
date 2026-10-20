@@ -212,6 +212,10 @@ func TestRunFunctionGolden(t *testing.T) {
 			Composite: "testdata/xr.yaml",
 			// Function input file
 			Input: "testdata/input.yaml",
+			// Desired composite resource produced by a prior function in the pipeline
+			DesiredComposite: "testdata/desired-xr.yaml",
+			// Desired resources produced by a prior function in the pipeline, mapped by key
+			Desired: map[string]string{"resource-key": "testdata/desired-resource.yaml"},
 			// Location of the golden files
 			DesiredLocation: "testdata/golden/",
 		},
