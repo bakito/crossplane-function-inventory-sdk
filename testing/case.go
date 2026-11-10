@@ -41,13 +41,22 @@ type Args struct {
 // Want function response and error.
 type Want struct {
 	Rsp *fnv1.RunFunctionResponse
+	// Err is the expected error. A plain error matches either by errors.Is or by its
+	// normalized message, see NormalizeErrorMessage. Assign an ErrorMatcher such as
+	// ErrorContains or ErrorIs to match an error whose message is not fully predictable.
+	// If an error is expected, the response is not verified.
 	Err error
 }
 
 // FunctionResult is the result of a function execution.
 type FunctionResult struct {
 	Severity fnv1.Severity
-	Message  string
+	// Message is the expected result message. It is compared after normalizing both sides,
+	// see NormalizeErrorMessage. Empty to not verify the message.
+	Message string
+	// MessageMatcher verifies the result message instead of Message, for a message that is
+	// only partly predictable. See Contains, Matching and Equal.
+	MessageMatcher StringMatcher
 }
 
 // Run runs the function test case.
@@ -71,16 +80,15 @@ func (c *Case) runCase(tb gt.TB, f fnv1.FunctionRunnerServiceServer) {
 	d := newDiff(c.DiffOptions)
 	rsp, err := f.RunFunction(c.Args.Ctx, c.Args.Req)
 
+	verifyError(tb, d, err, c.Want.Err)
 	if c.Want.Err != nil {
-		require.Error(tb, err)
-		require.EqualError(tb, err, c.Want.Err.Error())
 		return
 	}
 	if c.Want.Rsp != nil {
 		require.NotNil(tb, rsp)
 	}
 
-	verifyResponseResults(tb, rsp, c.Results)
+	verifyResponseResults(tb, d, rsp, c.Results)
 
 	if c.Want.Rsp != nil {
 		if d.granular {
@@ -137,15 +145,19 @@ func toUnstructured(got *structpb.Struct) (unstructured.Unstructured, error) {
 	return *us, err
 }
 
-func verifyResponseResults(tb gt.TB, rsp *fnv1.RunFunctionResponse, results []FunctionResult) {
+func verifyResponseResults(
+	tb gt.TB,
+	d *diff,
+	rsp *fnv1.RunFunctionResponse,
+	results []FunctionResult,
+) {
 	tb.Helper()
-	assert.Len(tb, rsp.GetResults(), len(results))
-	if len(results) > 0 {
-		for i, result := range results {
-			assert.Equal(tb, result.Severity, rsp.GetResults()[i].GetSeverity())
-			if result.Message != "" {
-				assert.Equal(tb, result.Message, rsp.GetResults()[i].GetMessage())
-			}
-		}
+	if !assert.Len(tb, rsp.GetResults(), len(results)) {
+		return
+	}
+	for i, result := range results {
+		got := rsp.GetResults()[i]
+		assert.Equal(tb, result.Severity, got.GetSeverity())
+		verifyMessage(tb, d, got.GetMessage(), result.Message, result.MessageMatcher)
 	}
 }

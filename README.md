@@ -296,8 +296,50 @@ func TestRunFunction(t *testing.T) {
 - `Want.Rsp` is compared in full, including meta/TTL, results and conditions. With `ft.Granular()`, only the
   desired composite and the desired resources are compared.
 - `Results` additionally checks the severity (and the message, if set) of each result returned.
-- `Want.Err` is compared by its message. If an error is expected, the response is not checked.
+- `Want.Err` matches either by `errors.Is` or by its message. If an error is expected, the response is not checked.
 - `Parallel: n` runs the same case n times at once, to detect race conditions.
+
+### Asserting errors
+
+Some libraries deliberately randomize the wording of their errors to discourage comparing error strings, which makes an
+exact match flicker. `github.com/go-json-experiment/json` picks the modal verb `cannot` or `unable to` once per process,
+and `google.golang.org/protobuf` prefixes its errors with `proto: ` using either a regular or a non-breaking space,
+chosen from a hash of the test binary. Both renderings reach a test through a wrapped error, and through the message of
+a fatal result, since `response.Fatal` copies `err.Error()` into it.
+
+Every comparison made by `ft.Case` and `ft.GoldenFileCase` therefore normalizes both sides first, so the known
+randomized renderings compare equal. `ft.NormalizeErrorMessage` does the same for a hand-written assertion.
+
+Where normalization is not enough - a byte offset, a Go type name or any other part that is genuinely unpredictable -
+assign a matcher instead of a plain error. Matchers implement `error`, so they go into the same `Err` field:
+
+```go
+Want: ft.Want{Err: ft.ErrorContains("cannot marshal", "into Go string")},
+Want: ft.Want{Err: ft.ErrorIs(myfn.ErrNoInput)},
+Want: ft.Want{Err: ft.ErrorMatching(`^cannot marshal .* to JSON`)},
+Want: ft.Want{Err: ft.ErrorAs[*json.SemanticError]()},
+Want: ft.Want{Err: ft.AllOf(ft.ErrorAs[*json.SemanticError](), ft.ErrorContains("cannot marshal"))},
+```
+
+A result message takes the same matchers through `MessageMatcher`:
+
+```go
+Results: []ft.FunctionResult{{
+	Severity:       fnv1.Severity_SEVERITY_FATAL,
+	MessageMatcher: ft.Contains("cannot marshal"),
+}},
+```
+
+For a value that changes between runs, such as a byte offset or a timestamp, register your own replacement. It applies
+to error messages, result messages, response diffs and golden files alike:
+
+```go
+DiffOptions: []ft.DiffOption{
+	ft.WithNormalizer(regexp.MustCompile(`after offset \d+`), "after offset N"),
+},
+```
+
+`ft.WithoutDefaultNormalizers()` turns the built-in normalization off, making every comparison byte-exact again.
 
 ### Golden file test cases
 
@@ -347,6 +389,7 @@ func TestRunFunctionGolden(t *testing.T) {
 			Composite:       dir + "/invalid-input/xr.yaml",
 			Input:           dir + "/invalid-input/input.yaml",
 			DesiredLocation: dir + "/invalid-input/want",
+			// a matcher may be used in place of a plain error, see "Asserting errors"
 			Err:             errors.New("cannot parse input"),
 		},
 	}

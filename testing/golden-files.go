@@ -55,7 +55,10 @@ type GoldenFileCase struct {
 	DesiredLocation string
 	// WithReady whether to verify the ready result of the desired resources in the function response.
 	WithReady bool
-	// Err the expected error returned by the function.
+	// Err the expected error returned by the function. A plain error matches either by
+	// errors.Is or by its normalized message, see NormalizeErrorMessage. Assign an
+	// ErrorMatcher such as ErrorContains or ErrorIs to match an error whose message is not
+	// fully predictable. If an error is expected, the desired resources are not verified.
 	Err error
 	// Results the expected results returned by the function. Empty of OK
 	Results []FunctionResult
@@ -97,16 +100,13 @@ func (c *GoldenFileCase) Run(tb gt.TB, caseName string, f fnv1.FunctionRunnerSer
 
 	rsp, err := f.RunFunction(ctx, req)
 
+	verifyError(tb, c.diff, err, c.Err)
 	if c.Err != nil {
-		require.Error(tb, err)
-		require.EqualError(tb, err, c.Err.Error())
 		return
 	}
 	require.NotNil(tb, rsp)
 
-	verifyResponseResults(tb, rsp, c.Results)
-
-	require.NoError(tb, err)
+	verifyResponseResults(tb, c.diff, rsp, c.Results)
 
 	c.verifyDesiredResources(tb, rsp, desiredFiles)
 }
