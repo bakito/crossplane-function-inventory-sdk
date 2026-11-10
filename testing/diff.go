@@ -20,9 +20,24 @@ const (
 )
 
 type diff struct {
-	diffContextLines int
-	yamlIndent       int
-	granular         bool
+	diffContextLines     int
+	yamlIndent           int
+	granular             bool
+	normalizers          []Normalizer
+	noDefaultNormalizers bool
+}
+
+// normalize canonicalizes the unstable renderings in s. It satisfies Normalize and is applied
+// to both sides of every comparison, so that a test never depends on wording that upstream
+// libraries deliberately randomize. See NormalizeErrorMessage and WithNormalizer.
+func (d *diff) normalize(s string) string {
+	if !d.noDefaultNormalizers {
+		s = NormalizeErrorMessage(s)
+	}
+	for _, n := range d.normalizers {
+		s = n.apply(s)
+	}
+	return s
 }
 
 // Colorize returns a string with colorized diff.
@@ -54,9 +69,14 @@ func (d *diff) unifiedDiff(want, actual any, description string) (string, error)
 	return d.unifiedYamlDiff(yamlWant, yamlActual, description, description)
 }
 
+// unifiedYamlDiff diffs the two documents after normalizing both of them, so the rendered
+// diff shows normalized text. Golden files on disk keep the raw rendering they were written
+// with, so a file captured under one rendering still matches under the other.
 func (d *diff) unifiedYamlDiff(
 	yamlExpected, yamlActual, descExpected, descActual string,
 ) (string, error) {
+	yamlExpected = d.normalize(yamlExpected)
+	yamlActual = d.normalize(yamlActual)
 	edits := udiff.Strings(yamlExpected, yamlActual)
 	return udiff.ToUnified(
 		"Expected "+descExpected,
