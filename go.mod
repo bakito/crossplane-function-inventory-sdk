@@ -3,7 +3,7 @@ module github.com/bakito/crossplane-function-inventory-sdk
 go 1.26.10
 
 require (
-	github.com/alecthomas/kong v1.16.1
+	github.com/alecthomas/kong v1.17.0
 	github.com/aymanbagabas/go-udiff v0.4.1
 	github.com/crossplane/crossplane-runtime/v2 v2.4.3
 	github.com/crossplane/crossplane/apis/v2 v2.4.3
